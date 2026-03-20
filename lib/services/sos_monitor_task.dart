@@ -65,7 +65,7 @@ class SOSMonitorTask {
     _speech.listen(
       onResult: (result) {
         final text = result.recognizedWords.toLowerCase();
-        if (text.contains("help me aawaj")) {
+        if (text.contains("help me")) {
           debugPrint("SOS triggered by voice phrase!");
           _triggerSOS();
         }

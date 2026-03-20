@@ -1,5 +1,3 @@
-// This file contains Location, Chat, Contacts, Settings, Record, and Disguise screens
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
@@ -7,8 +5,9 @@ import '../providers/app_provider.dart';
 import '../models/contact.dart';
 import '../models/chat_message.dart';
 import '../widgets/glass_card.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-// ==================== LOCATION SCREEN ====================
+/// ==================== LOCATION SCREEN ====================
 class LocationScreen extends StatefulWidget {
   const LocationScreen({super.key});
 
@@ -20,16 +19,46 @@ class _LocationScreenState extends State<LocationScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchLocation();
+    _fetchLiveLocation();
   }
 
-  Future<void> _fetchLocation() async {
+  Future<void> _fetchLiveLocation() async {
     final provider = Provider.of<AppProvider>(context, listen: false);
-    provider.setLocationStatus('Fetching location...');
+    provider.updateLocation(
+        provider.latitude ?? 0,
+        provider.longitude ?? 0,
+        'Fetching location...'
+    );
+    await provider.fetchLiveLocation();
+  }
 
-    // Simulate location fetch - in real app use geolocator package
-    await Future.delayed(const Duration(seconds: 2));
-    provider.updateLocation(28.6139, 77.2090, 'Location found!');
+  void _shareLocation() {
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final lat = provider.latitude;
+    final lng = provider.longitude;
+
+    if (lat != null && lng != null) {
+      final locationUrl = 'https://maps.google.com/?q=$lat,$lng';
+      for (var contact in provider.contacts) {
+        // Placeholder: open SMS link via URL launcher (works for Android/iOS)
+        launchUrl(Uri.parse('sms:${contact.phone}?body=Emergency! My location: $locationUrl'));
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Location shared with ${provider.contacts.length} contact(s)'),
+          backgroundColor: Colors.green[700],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location not available yet'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
@@ -110,16 +139,7 @@ class _LocationScreenState extends State<LocationScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Location shared with ${provider.contacts.length} contact(s)'),
-                          backgroundColor: Colors.green[700],
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
+                    onPressed: _shareLocation,
                     icon: const Icon(Icons.share),
                     label: const Text('Share with All Contacts'),
                     style: ElevatedButton.styleFrom(

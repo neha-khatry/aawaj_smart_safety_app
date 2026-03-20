@@ -60,7 +60,7 @@ class ScreamListenerService {
   }
 
   Future<bool> _sendToBackend(File audioFile) async {
-    final uri = Uri.parse('http://10.0.2.2:8000/api/detect_scream/');
+    final uri = Uri.parse('http://192.168.121.109:8000/api/detect_scream/');
     final request = http.MultipartRequest('POST', uri);
     request.files.add(
       await http.MultipartFile.fromPath(

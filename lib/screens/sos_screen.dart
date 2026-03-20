@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
-
 import 'package:geolocator/geolocator.dart';
-
 import '../providers/app_provider.dart';
 import '../services/emergency_api.dart';
 import '../services/sms_sender.dart';
+import '../services/device_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../services/silent_recorder_service.dart';
+import '../services/sos_api_service.dart';
+import '../services/sos_trigger.dart';
 
 class SOSScreen extends StatefulWidget {
   const SOSScreen({super.key});
@@ -18,7 +22,7 @@ class SOSScreen extends StatefulWidget {
 class _SOSScreenState extends State<SOSScreen> with SingleTickerProviderStateMixin {
   int _countdown = 10;
   Timer? _timer;
-
+  final SilentRecorderService _recorder = SilentRecorderService();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -46,9 +50,18 @@ class _SOSScreenState extends State<SOSScreen> with SingleTickerProviderStateMix
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (_countdown <= 0) {
         timer.cancel();
+
+        // If user has not cancelled, trigger SOS automatically
         if (!_executed) {
           _executed = true;
+          await SosTrigger.triggerSOS();
           await _executeSOS();
+          // 🔴 ADD THIS (START RECORDING)
+          final recorder = SilentRecorderService();
+          final audioPath = await recorder.start();
+
+          // 🔴 SAVE METADATA TO BACKEND
+          await SosApiService.saveAudioMetadata(audioPath);
         }
         return;
       }
@@ -62,6 +75,7 @@ class _SOSScreenState extends State<SOSScreen> with SingleTickerProviderStateMix
       });
     });
   }
+
 
   Future<Position?> _getLocationSafely() async {
     try {
@@ -86,6 +100,86 @@ class _SOSScreenState extends State<SOSScreen> with SingleTickerProviderStateMix
   }
 
   Future<void> _executeSOS() async {
+    setState(() {
+      _smsAlertsSending = true;
+    });
+
+    try {
+      // 1) Get the device_id
+      final deviceId = await DeviceService.getDeviceId();
+      print('Triggering SOS for device_id: $deviceId');
+
+      // 2) Call your backend API to trigger Twilio SMS
+      final response = await http.post(
+        Uri.parse('http://192.168.1.72:8000/api/trigger_sos/'), // <-- your backend URL
+        headers: {
+          'Content-Type': 'application/json',
+          // No Authorization needed
+        },
+        body: jsonEncode({'device_id': deviceId}),
+      );
+
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      setState(() {
+        _smsAlertsSending = false;
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('SOS sent successfully to ${data['sent_count']} contacts');
+        if ((data['failed'] as List).isNotEmpty) {
+          print('Failed deliveries: ${data['failed']}');
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('SOS sent to ${data['sent_count']} contacts!'),
+            backgroundColor: Colors.green[700],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        // Try to read error from response body
+        String errorMessage = 'Unknown error';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage = errorData['error'] ?? errorMessage;
+        } catch (_) {
+          // ignore JSON decode errors
+        }
+
+        print('Failed to send SOS: $errorMessage');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send SOS: $errorMessage'),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      setState(() {
+        _smsAlertsSending = false;
+      });
+
+      print('Exception while sending SOS: $e');
+      print(stackTrace);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error sending SOS: $e'),
+          backgroundColor: Colors.red[700],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+
+  /**Future<void> _executeSOS() async {
     final provider = Provider.of<AppProvider>(context, listen: false);
 
     if (!provider.isLoggedIn) {
@@ -98,8 +192,8 @@ class _SOSScreenState extends State<SOSScreen> with SingleTickerProviderStateMix
         ),
       );
       return;
-    }
-
+    }**/
+/**
     // 1) Get location
     final pos = await _getLocationSafely();
     final lat = pos?.latitude ?? 0.0;
@@ -151,10 +245,11 @@ class _SOSScreenState extends State<SOSScreen> with SingleTickerProviderStateMix
         behavior: SnackBarBehavior.floating,
       ),
     );
-  }
+  }**/
 
   void _cancelSOS() {
     _timer?.cancel();
+    _executed = true; // Prevent automatic SOS send
     Navigator.of(context).pop();
 
     ScaffoldMessenger.of(context).showSnackBar(

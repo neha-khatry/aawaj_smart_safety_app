@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:latlong2/latlong.dart';
 import '../providers/app_provider.dart';
 import '../widgets/glass_card.dart';
-import 'dart:async';
+import '../widgets/mini_map.dart';
+import 'full_map_screen.dart';
 
 class LocationScreen extends StatefulWidget {
   const LocationScreen({super.key});
@@ -15,16 +17,9 @@ class _LocationScreenState extends State<LocationScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchLocation();
-  }
-
-  Future<void> _fetchLocation() async {
-    final provider = Provider.of<AppProvider>(context, listen: false);
-    provider.setLocationStatus('Fetching location...');
-
-    // Simulate location fetch - in real app use geolocator package
-    await Future.delayed(const Duration(seconds: 2));
-    provider.updateLocation(28.6139, 77.2090, 'Location found!');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AppProvider>(context, listen: false).fetchLiveLocation();
+    });
   }
 
   @override
@@ -52,54 +47,62 @@ class _LocationScreenState extends State<LocationScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                GlassCard(
-                  padding: EdgeInsets.zero,
-                  child: Container(
-                    height: 250,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.blue.shade900.withOpacity(0.5),
-                          Colors.purple.shade900.withOpacity(0.5),
-                        ],
+                /// 🗺️ MINI MAP
+                GestureDetector(
+                  onTap: provider.latitude == null
+                      ? null
+                      : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FullMapScreen(
+                          lat: provider.latitude!,
+                          lng: provider.longitude!,
+                          accuracy: provider.accuracy,
+                        ),
                       ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    );
+                  },
+                  child: GlassCard(
+                    padding: EdgeInsets.zero,
+                    child: SizedBox(
+                      height: 250,
+                      child: provider.latitude == null
+                          ? _loadingState(provider.locationStatus)
+                          : Stack(
                         children: [
-                          Container(
-                            width: 70,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.blue.withOpacity(0.3),
+                          MiniMap(
+                            location: LatLng(
+                              provider.latitude!,
+                              provider.longitude!,
                             ),
-                            child: Icon(Icons.location_on,
-                                size: 40, color: Colors.blue[400]),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            provider.locationStatus,
-                            style: TextStyle(color: Colors.grey[300]),
-                          ),
-                          if (provider.latitude != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                '${provider.latitude?.toStringAsFixed(4)}, ${provider.longitude?.toStringAsFixed(4)}',
+                          Positioned(
+                            bottom: 12,
+                            right: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                'Tap to expand',
                                 style: TextStyle(
-                                    color: Colors.grey[500], fontSize: 12),
+                                    color: Colors.white, fontSize: 12),
                               ),
                             ),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
 
+                /// 🔗 SHARE BUTTON
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -121,15 +124,19 @@ class _LocationScreenState extends State<LocationScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
 
+                /// ⚙️ TRACKING OPTIONS
                 GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Tracking Options',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w600)),
+                      const Text(
+                        'Tracking Options',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
                       const SizedBox(height: 16),
                       _buildToggleRow(
                         'Live tracking',
@@ -147,7 +154,6 @@ class _LocationScreenState extends State<LocationScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 100),
               ],
             ),
           ),
@@ -157,7 +163,11 @@ class _LocationScreenState extends State<LocationScreen> {
   }
 
   Widget _buildToggleRow(
-      String label, bool value, Function(bool) onChanged, Color activeColor) {
+      String label,
+      bool value,
+      Function(bool) onChanged,
+      Color activeColor,
+      ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -168,6 +178,19 @@ class _LocationScreenState extends State<LocationScreen> {
           activeColor: activeColor,
         ),
       ],
+    );
+  }
+
+  Widget _loadingState(String status) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(color: Colors.blue),
+          const SizedBox(height: 12),
+          Text(status, style: TextStyle(color: Colors.grey[300])),
+        ],
+      ),
     );
   }
 }

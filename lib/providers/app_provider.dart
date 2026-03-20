@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/contact.dart';
 import '../models/recording.dart';
+import '../services/contact_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 class AppProvider extends ChangeNotifier {
   // ===================== AUTH (JWT) =====================
@@ -17,6 +19,27 @@ class AppProvider extends ChangeNotifier {
   // ===================== CONTACTS =====================
   List<EmergencyContact> _contacts = [];
   List<EmergencyContact> get contacts => _contacts;
+  // ===================== BACKEND CONTACT SYNC =====================
+  Future<void> fetchContactsFromBackend() async {
+    try {
+      final data = await ContactService.getContacts();
+
+      _contacts = data.map<EmergencyContact>((json) {
+        return EmergencyContact(
+          id: json['id'].toString(),
+          name: json['name'],
+          phone: json['phone_number'],
+          relation: json['relation'] ?? '',
+        );
+      }).toList();
+
+      await _saveData(); // cache locally
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to fetch contacts from backend: $e');
+    }
+  }
+
 
   // ===================== RECORDINGS =====================
   List<Recording> _recordings = [];
@@ -32,6 +55,7 @@ class AppProvider extends ChangeNotifier {
   bool _offlineRecording = true;
   bool _checkInEnabled = false;
 
+
   bool get voiceActivation => _voiceActivation;
   bool get shakeDetection => _shakeDetection;
   bool get powerButton => _powerButton;
@@ -45,11 +69,11 @@ class AppProvider extends ChangeNotifier {
   double? _latitude;
   double? _longitude;
   String _locationStatus = 'Fetching location...';
-
+  double? _accuracy;
   double? get latitude => _latitude;
   double? get longitude => _longitude;
   String get locationStatus => _locationStatus;
-
+  double? get accuracy => _accuracy;
   // ===================== RECORDING STATE =====================
   bool _isRecording = false;
   String _recordingType = '';
@@ -161,10 +185,20 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeContact(String id) {
-    _contacts.removeWhere((c) => c.id == id);
-    _saveData();
-    notifyListeners();
+  Future<void> removeContact(String contactId) async {
+    try {
+      final success = await ContactService.deleteContact(
+        contactId: contactId,
+      );
+
+      if (success) {
+        _contacts.removeWhere((c) => c.id == contactId);
+        await _saveData();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Failed to delete contact: $e');
+    }
   }
 
   // ===================== RECORDING METHODS =====================
@@ -198,6 +232,44 @@ class AppProvider extends ChangeNotifier {
     _locationStatus = status;
     notifyListeners();
   }
+
+  Future<void> fetchLiveLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _locationStatus = 'Location service disabled';
+        notifyListeners();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever) {
+        _locationStatus = 'Permission denied forever';
+        notifyListeners();
+        return;
+      }
+
+      _locationStatus = 'Fetching GPS...';
+      notifyListeners();
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      _latitude = position.latitude;
+      _longitude = position.longitude;
+      _accuracy = position.accuracy;
+      _locationStatus = 'Live location active';
+      notifyListeners();
+    } catch (e) {
+      _locationStatus = 'GPS error';
+      notifyListeners();
+    }
+  }
+
 
   // ===================== SETTINGS METHODS =====================
   void toggleVoiceActivation() {
@@ -236,6 +308,12 @@ class AppProvider extends ChangeNotifier {
 
   void toggleOfflineRecording() {
     _offlineRecording = !_offlineRecording;
+    _saveData();
+    notifyListeners();
+  }
+
+  void setCheckInEnabled(bool value) {
+    _checkInEnabled = value;
     _saveData();
     notifyListeners();
   }

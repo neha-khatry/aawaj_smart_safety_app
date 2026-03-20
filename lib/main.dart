@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/app_provider.dart';
 import 'screens/splash_screen.dart';
+import 'services/navigator_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,6 +89,7 @@ class AawajApp extends StatelessWidget {
             elevation: 0,
           ),
         ),
+          navigatorKey: navigatorKey,
         home: const SplashScreen(),
       ),
     );

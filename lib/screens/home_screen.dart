@@ -10,6 +10,13 @@ import 'sos_screen.dart';
 import 'settings_screen.dart';
 import 'record_screen.dart';
 import 'login_screen.dart';
+import '../services/sos_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../services/sos_volume_listener.dart';
+import '../services/sos_trigger.dart';
+import 'package:another_telephony/telephony.dart';
+import'../services/navigator_service.dart';
+import '../services/checkin_watcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late Animation<double> _sosAnimation;
   String _currentTime = '';
   bool _isVoiceTriggerActive = false;
-
+  CheckinWatcher? _checkinWatcher;
   Timer? _pendingTimer;
   String? _lastShownPendingId;
 
@@ -33,7 +40,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-
+    _requestStoragePermission();
+    SosVolumeListener.initialize(() async {
+      print("📌 SOS callback triggered from volume button");
+     // await SosTrigger.triggerSOS();
+      // 🔥 Navigate to SOS Screen
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const SOSScreen()),
+            (route) => false,
+      );
+    });
     _sosController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -45,9 +61,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     _updateTime();
     Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
-
+    // Start check-in watcher
+    _checkinWatcher = CheckinWatcher(context);
+    _checkinWatcher!.start();
     // Poll backend for pending check-ins
-    _pendingTimer = Timer.periodic(const Duration(seconds: 15), (_) => _checkPending());
+    //_pendingTimer = Timer.periodic(const Duration(seconds: 15), (_) => _checkPending());
 
     // Initialize SOS monitor task
     _sosMonitorTask = SOSMonitorTask();
@@ -55,6 +73,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _sosMonitorTask!.onSOSDetected = _triggerSOS;
   }
 
+  Future<void> _requestStoragePermission() async {
+    await Permission.storage.request();
+  }
   void _updateTime() {
     final now = DateTime.now();
     setState(() {
@@ -116,27 +137,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Future<void> _scheduleCheckIn() async {
-    final provider = Provider.of<AppProvider>(context, listen: false);
-
-    if (!provider.isLoggedIn) {
-      _showMsg('Login required', 'Please login first to use backend check-in.');
-      return;
-    }
-
+  Future<bool> _scheduleCheckIn() async {
     final now = DateTime.now();
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(minutes: 5))),
+      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(minutes: 1))),
     );
 
-    if (time == null) return;
+    if (time == null) return false;
 
-    final scheduledAt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-    final finalScheduledAt =
-    scheduledAt.isBefore(now) ? scheduledAt.add(const Duration(days: 1)) : scheduledAt;
+    final scheduledAt =
+    DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    final finalScheduledAt = scheduledAt.isBefore(now)
+        ? scheduledAt.add(const Duration(days: 1))
+        : scheduledAt;
 
-    final api = CheckInApi(provider.accessToken!);
+    final api = CheckInApi();
 
     try {
       final ok = await api.schedule(finalScheduledAt);
@@ -148,16 +164,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       } else {
         _showMsg('Failed', 'Could not schedule check-in.');
       }
+      return ok;
     } catch (e) {
       _showMsg('Error', 'Scheduling failed: $e');
+      return false;
     }
-    // Stop foreground service if scheduled check-in is enabled
-    //if (provider.checkInEnabled) {
-      //SOSMonitorTask.stop();
-    //}
   }
 
-  Future<void> _checkPending() async {
+  /**Future<void> _checkPending() async {
     if (!mounted) return;
 
     final provider = Provider.of<AppProvider>(context, listen: false);
@@ -181,9 +195,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     } catch (_) {
       // ignore polling errors
     }
-  }
+  }**/
 
-  Future<void> _showConfirmDialog({required String checkInId}) async {
+  /**Future<void> _showConfirmDialog({required String checkInId}) async {
     final provider = Provider.of<AppProvider>(context, listen: false);
     final api = CheckInApi(provider.accessToken!);
 
@@ -219,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         );
       },
     );
-  }
+  }**/
 
   @override
   Widget build(BuildContext context) {
@@ -451,8 +465,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           Switch(
                             value: provider.checkInEnabled,
                             onChanged: (val) async {
-                              provider.toggleCheckIn();
-                              if (val) await _scheduleCheckIn();
+                              if (val) {
+                                final scheduled = await _scheduleCheckIn();
+                                if (scheduled && !provider.checkInEnabled) {
+                                  provider.toggleCheckIn();
+                                }
+                              } else {
+                                if (provider.checkInEnabled) provider.toggleCheckIn();
+                              }
                             },
                             activeColor: const Color(0xFFec4899),
                           ),
@@ -465,41 +485,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             : 'Disabled',
                         style: TextStyle(color: Colors.grey[400], fontSize: 12),
                       ),
-                      if (!provider.isLoggedIn) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Backend check-in requires login/token (JWT).',
-                          style: TextStyle(color: Colors.orange[300], fontSize: 12),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const LoginScreen()),
-                            ),
-                            child: const Text('Login now'),
-                          ),
-                        ),
-                      ] else ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Logged in ✅ (token saved).',
-                          style: TextStyle(color: Colors.green[300], fontSize: 12),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              await provider.logout();
-                              _showMsg('Logged out', 'Token cleared.');
-                            },
-                            child: const Text('Logout'),
-                          ),
-                        ),
-                      ],
+
                     ],
                   ),
                 ),
