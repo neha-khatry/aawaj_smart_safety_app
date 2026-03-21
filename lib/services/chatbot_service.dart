@@ -90,8 +90,9 @@ class ChatResponse {
 // ── Service ──────────────────────────────────────────────────────────────
 
 class ChatbotService {
-  // Change this to your Django server IP/URL
-  static const String _baseUrl = 'http://10.0.2.2:8000/api/v1/chatbot';
+  //static const String _baseUrl = 'http://10.0.2.2:8000/api/v1/chatbot';
+  // for running on chrome
+   static const String _baseUrl = 'http://127.0.0.1:8000/api/v1/chatbot';
   // For physical device on same network: 'http://192.168.1.x:8000/api/v1/chatbot'
 
   static const Duration _timeout = Duration(seconds: 15);

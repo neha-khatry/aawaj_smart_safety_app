@@ -1,25 +1,20 @@
 import 'sos_sms_service.dart';
 import 'contact_service.dart';
-/**
+import 'location_service.dart';
+
+
 class SosTrigger {
   static Future<void> triggerSOS() async {
     print("📌 SOS callback triggered in Flutter");
 
-    final contacts = [
-      "9840038509",
-      ///"9864616464",
-    ];
+    // 🔴 STEP 1: Get location
+    final position = await LocationService.getCurrentLocation();
 
-    final message =
-        "🚨 SOS ALERT! I am in danger! Please contact me immediately.";
+    double lat = position.latitude;
+    double lon = position.longitude;
 
-    await SosSmsService.sendAlert(contacts: contacts, message: message);
-  }
-}
-**/
-class SosTrigger {
-  static Future<void> triggerSOS() async {
-    print("📌 SOS callback triggered in Flutter");
+    // 🔴 STEP 2: Generate map link
+    String mapLink = "https://www.google.com/maps?q=$lat,$lon";
 
     // 1️⃣ Fetch contacts from backend
     final contactsData = await ContactService.getContacts();
@@ -36,7 +31,7 @@ class SosTrigger {
 
     // 3️⃣ SOS message
     final message =
-        "🚨 SOS ALERT! I am in danger! Please contact me immediately.";
+        "🚨 SOS ALERT! I am in danger! Please contact me immediately.📍 My Location:https://www.google.com/maps?q=$lat,$lon";
 
     // 4️⃣ Send SMS
     await SosSmsService.sendAlert(

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import 'home_screen.dart';
 import 'location_screen.dart';
-import 'chat_screen.dart';
+import 'chatbot_screen.dart';    // ← changed
 import 'contacts_screen.dart';
 import 'disguise_screen.dart';
 
@@ -17,26 +17,27 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const LocationScreen(),
-    const ChatScreen(),
-    const ContactsScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AppProvider>(context);
 
-    // Show disguise mode (calculator)
     if (provider.disguiseMode) {
       return const DisguiseScreen();
     }
 
+    final deviceId = provider.userName;   // ← use userName as device ID
+
+    final List<Widget> screens = [
+      const HomeScreen(),
+      const LocationScreen(),
+      ChatbotScreen(deviceId: deviceId),  // ← changed
+      const ContactsScreen(),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -56,7 +57,7 @@ class _MainNavigationState extends State<MainNavigation> {
               children: [
                 _buildNavItem(0, Icons.home, 'Home'),
                 _buildNavItem(1, Icons.location_on, 'Location'),
-                _buildNavItem(2, Icons.chat_bubble, 'Support'),
+                _buildNavItem(2, Icons.favorite, 'Support'),  // ← icon changed
                 _buildNavItem(3, Icons.people, 'Contacts'),
               ],
             ),
