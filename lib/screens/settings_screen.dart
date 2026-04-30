@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../widgets/glass_card.dart';
+import '../services/detection_foreground_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -40,6 +41,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
+                // ───────── PROFILE ─────────
                 GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,6 +86,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
+                // ───────── EMERGENCY TRIGGERS ─────────
                 GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,6 +119,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
+                // ───────── DISGUISE MODE ─────────
                 GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,6 +144,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
+                // ───────── OFFLINE SAFETY ─────────
                 GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,6 +167,46 @@ class SettingsScreen extends StatelessWidget {
                         provider.offlineRecording,
                             (_) => provider.toggleOfflineRecording(),
                         activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // ───────── 🔴 SECURITY CONTROL (NEW) ─────────
+                GlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Security Control',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 12),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            // 🔴 STOP foreground detection
+                            await DetectionForegroundService.stop();
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Protection turned OFF'),
+                                backgroundColor: Colors.red[700],
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.withOpacity(0.3),
+                          ),
+                          child: const Text(
+                            'Turn Off Protection',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -192,7 +237,8 @@ class SettingsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-              Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+              Text(subtitle,
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12)),
             ],
           ),
           Switch(

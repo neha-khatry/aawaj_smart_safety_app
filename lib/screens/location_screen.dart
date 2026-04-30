@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:share_plus/share_plus.dart';
 import '../providers/app_provider.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/mini_map.dart';
+import '../services/api_service.dart';
+import '../services/realtimeservice.dart';
 import 'full_map_screen.dart';
 
 class LocationScreen extends StatefulWidget {
@@ -14,12 +17,42 @@ class LocationScreen extends StatefulWidget {
 }
 
 class _LocationScreenState extends State<LocationScreen> {
+  String? token;
+  String? link;
+  bool isTracking = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<AppProvider>(context, listen: false).fetchLiveLocation();
     });
+  }
+
+  void startTracking() async {
+    await LocationService.checkPermission();
+
+    String newToken = await ApiService.createSession();
+
+    setState(() {
+      token = newToken;
+      link = "http://172.16.9.190:8000/api/track/$token/";
+      isTracking = true;
+    });
+
+    LocationService.getLocationStream().listen((position) {
+      ApiService.sendLocation(
+        token!,
+        position.latitude,
+        position.longitude,
+      );
+    });
+  }
+
+  void shareLink() {
+    if (link != null) {
+      Share.share("Track me live: $link");
+    }
   }
 
   @override
@@ -102,26 +135,58 @@ class _LocationScreenState extends State<LocationScreen> {
 
                 const SizedBox(height: 20),
 
-                /// 🔗 SHARE BUTTON
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Location shared with ${provider.contacts.length} contact(s)'),
-                          backgroundColor: Colors.green[700],
-                          behavior: SnackBarBehavior.floating,
+                /// 🔗 SHARE / TRACKING SECTION
+                GlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Share Location',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 16),
+
+                      if (!isTracking)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: startTracking,
+                            icon: const Icon(Icons.share),
+                            label: const Text('Share with All Contacts'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: const Color(0xFF3b82f6),
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share with All Contacts'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: const Color(0xFF3b82f6),
-                    ),
+
+                      if (isTracking) ...[
+                        const Text(
+                          'Tracking Started',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 10),
+                        SelectableText(
+                          link ?? '',
+                          style: TextStyle(color: Colors.grey[300]),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: shareLink,
+                            icon: const Icon(Icons.link),
+                            label: const Text('Share Link'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: const Color(0xFF3b82f6),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
 

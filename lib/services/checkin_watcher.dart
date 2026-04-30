@@ -22,11 +22,13 @@ class CheckinWatcher {
   }
 
   Future<void> _checkPending() async {
+
+    // ✅ skip if disabled
     final pending = await _api.getPending();
     if (pending.isEmpty) return;
 
     final provider = Provider.of<AppProvider>(context, listen: false);
-
+    if (!provider.checkInEnabled) return;
     for (var checkin in pending) {
       final id = checkin['id'].toString();
       if (_handledCheckIns.contains(id)) continue; // Already shown dialog
@@ -39,12 +41,12 @@ class CheckinWatcher {
         _handledCheckIns.add(id);
 
         // Show Safe / Not Safe dialog
-        _showCheckInDialog(id, provider);
+        _showCheckInDialog(id, scheduledStr!,provider);
       }
     }
   }
 
-  void _showCheckInDialog(String checkInId, AppProvider provider) {
+  void _showCheckInDialog(String checkInId, String scheduledAt, AppProvider provider) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -56,7 +58,7 @@ class CheckinWatcher {
             TextButton(
               onPressed: () async {
                 // Mark Safe
-                await _api.confirm(checkInId, isSafe: true);
+                await _api.confirm(checkInId, isSafe: true, scheduledAt: scheduledAt);
                 provider.setCheckInEnabled(false);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +75,7 @@ class CheckinWatcher {
             TextButton(
               onPressed: () async {
                 // Not Safe → trigger SOS
-                await _api.confirm(checkInId, isSafe: false);
+                await _api.confirm(checkInId, isSafe: false, scheduledAt: scheduledAt);
                 provider.setCheckInEnabled(false);
                 Navigator.of(context).pop(); // Close dialog
                 Navigator.of(context).push(

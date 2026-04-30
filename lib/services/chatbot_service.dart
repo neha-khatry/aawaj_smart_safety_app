@@ -5,6 +5,8 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../utils/constants.dart';
+
 
 // ── Models ───────────────────────────────────────────────────────────────
 
@@ -90,9 +92,9 @@ class ChatResponse {
 // ── Service ──────────────────────────────────────────────────────────────
 
 class ChatbotService {
-  //static const String _baseUrl = 'http://10.0.2.2:8000/api/v1/chatbot';
+  ///static const String _baseUrl = 'http://192.168.1.71:8000/api/v1/chatbot';
   // for running on chrome
-   static const String _baseUrl = 'http://127.0.0.1:8000/api/v1/chatbot';
+  // static const String _baseUrl = 'http://127.0.0.1:8000/api/v1/chatbot';
   // For physical device on same network: 'http://192.168.1.x:8000/api/v1/chatbot'
 
   static const Duration _timeout = Duration(seconds: 15);
@@ -106,7 +108,7 @@ class ChatbotService {
     try {
       final response = await _client
           .post(
-        Uri.parse('$_baseUrl/session/new/'),
+        Uri.parse('${Constants.baseUrl}/v1/chatbot/session/new/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'device_id': deviceId}),
       )
@@ -137,7 +139,7 @@ class ChatbotService {
 
       final response = await _client
           .post(
-        Uri.parse('$_baseUrl/message/'),
+        Uri.parse('${Constants.baseUrl}/v1/chatbot/message/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       )
@@ -157,7 +159,7 @@ class ChatbotService {
   Future<bool> isHealthy() async {
     try {
       final response = await _client
-          .get(Uri.parse('$_baseUrl/health/'))
+          .get(Uri.parse('${Constants.baseUrl}/v1/chatbot/health/'))
           .timeout(const Duration(seconds: 5));
       return response.statusCode == 200;
     } catch (_) {

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'device_service.dart';
-
+import '../utils/constants.dart';
 class ContactService {
-  static const String baseUrl = 'http://192.168.121.109:8000/api';
+  ///static const String baseUrl = 'http://192.168.1.71:8000/api';
 
   /// SAVE CONTACT
   static Future<bool> saveContact({
@@ -14,7 +14,7 @@ class ContactService {
     final deviceId = await DeviceService.getDeviceId();
 
     final response = await http.post(
-      Uri.parse('$baseUrl/save_contact/'),
+      Uri.parse('${Constants.baseUrl}/save_contact/'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'device_id': deviceId,
@@ -32,7 +32,7 @@ class ContactService {
     final deviceId = await DeviceService.getDeviceId();
 
     final response = await http.post(
-      Uri.parse('$baseUrl/get_contacts/'),
+      Uri.parse('${Constants.baseUrl}/get_contacts/'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'device_id': deviceId}),
     );
@@ -50,7 +50,7 @@ class ContactService {
     final deviceId = await DeviceService.getDeviceId();
 
     final url = Uri.parse(
-      '$baseUrl/contacts/delete/$contactId/?device_id=$deviceId',
+      '${Constants.baseUrl}/contacts/delete/$contactId/?device_id=$deviceId',
     );
 
     final response = await http.delete(url);

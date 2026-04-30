@@ -5,9 +5,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'providers/app_provider.dart';
 import 'screens/splash_screen.dart';
 import 'services/navigator_service.dart';
+import 'services/detection_foreground_service.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize foreground service at app start
+  await DetectionForegroundService.initialize();
+
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

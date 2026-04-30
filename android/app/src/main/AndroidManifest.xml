@@ -3,36 +3,41 @@
     <!-- Internet (API calls, maps, etc.) -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+
     <!-- Location (GPS tracking) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <!-- Audio recording (silent recording, voice trigger) -->
+
+    <!-- Audio recording -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <!-- Camera (video evidence capture) -->
+    <!-- Camera -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- Offline SMS alerts -->
+    <!-- SMS -->
     <uses-permission android:name="android.permission.SEND_SMS" />
 
-    <!-- Haptics / SOS vibration -->
+    <!-- Vibration -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Optional but helpful for some recording/background behaviors -->
+    <!-- Wake lock -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- Optional: if you later add background location tracking -->
-    <!--
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    -->
+
 
     <application
         android:allowBackup="true"
         android:label="aawaj_lastt"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"> <!-- ✅ IMPORTANT FIX -->
 
         <activity
             android:name=".MainActivity"
@@ -48,7 +53,8 @@
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
 
-            <meta-data android:name="com.google.android.geo.API_KEY"
+            <meta-data
+                android:name="com.google.android.geo.API_KEY"
                 android:value="YOUR KEY HERE"/>
 
             <intent-filter>
@@ -63,9 +69,14 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundTaskService"
+            android:foregroundServiceType="microphone"
+            android:exported="false"/>
+
     </application>
 
-    <!-- Required to query activities that can process text (Flutter ProcessTextPlugin) -->
+    <!-- Required for text processing -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

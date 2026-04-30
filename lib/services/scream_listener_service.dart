@@ -4,7 +4,7 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
-
+import '../utils/constants.dart';
 class ScreamListenerService {
   late FlutterSoundRecorder _recorder;
   bool _isListening = false;
@@ -60,7 +60,7 @@ class ScreamListenerService {
   }
 
   Future<bool> _sendToBackend(File audioFile) async {
-    final uri = Uri.parse('http://192.168.121.109:8000/api/detect_scream/');
+    final uri = Uri.parse('${Constants.baseUrl}/detect_scream/');
     final request = http.MultipartRequest('POST', uri);
     request.files.add(
       await http.MultipartFile.fromPath(

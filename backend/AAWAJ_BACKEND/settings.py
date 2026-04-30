@@ -20,12 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=j*r-2hsf9^167eav-ewmc!k3h-spv+ijbpl^8dhrrc+*gx^kz'
+SECRET_KEY = 'your-secret-key-here'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['10.0.2.2', 'localhost','192.168.1.72','127.0.0.1','192.168.121.109','172.20.10.3']
+ALLOWED_HOSTS = ['10.0.2.2', 'localhost','192.168.1.72','127.0.0.1','192.168.121.109','172.20.10.3','192.168.1.6','192.168.1.14']
 
 
 # Application definition
@@ -41,9 +41,14 @@ INSTALLED_APPS = [
     "corsheaders",
     'scream_detector',
     'checkin',
-    'chatbot'
+    'chatbot',
+    'phrase_detector',
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -78,16 +83,16 @@ WSGI_APPLICATION = 'AAWAJ_BACKEND.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-TWILIO_ACCOUNT_SID = "ACd111126460ee325a1c55c1a46cad303e"
-TWILIO_AUTH_TOKEN = "70724a4633707284fe0692efee59d3f1"
-TWILIO_PHONE_NUMBER = "+15074161968"
+TWILIO_ACCOUNT_SID = "your-twilio-account-sid"
+TWILIO_AUTH_TOKEN = "your-twilio-auth-token"
+TWILIO_PHONE_NUMBER = "your-twilio-phone-number"
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'aawaj_db',
         'USER': 'postgres',        # or sos_user
-        'PASSWORD': 'piggu123',
+        'PASSWORD': 'your_db_password',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -164,5 +169,6 @@ CELERY_BEAT_SCHEDULE = {
 
 import os
 CHATBOT_MODEL_DIR = os.path.join(BASE_DIR, 'chatbot', 'ml_models')
+PHRASE_MODEL_DIR = os.path.join(BASE_DIR, 'phrase_detector', 'ml_models')
 
 
