@@ -122,5 +122,5 @@ As one of four team members, I was personally responsible for:
 
 ## Links
 
-[LinkedIn](https://www.linkedin.com/in/neha-khatri-1a5917335/) · 
+[LinkedIn](https://www.linkedin.com/in/neha-k-1a5917335) · 
 [GitHub](https://github.com/Nehu2021)
