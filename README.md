@@ -16,6 +16,10 @@ mobile application that works even in low connectivity environments.
 
 ---
 
+## 🎥 Demo Video
+
+[Watch Project Demo](https://drive.google.com/file/d/1HOtkrs4_8KDYndKAx9-kuzaa9RPxa6yd/view)
+
 ## Features
 
 **Emergency & SOS**
@@ -45,6 +49,71 @@ mobile application that works even in low connectivity environments.
 - Disguise Mode to hide the app's true purpose on screen
 
 ---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Flutter (Dart) |
+| Backend | Django (Python) |
+| Database | PostgreSQL, Firebase |
+| ML — Scream Detection | SVM, MFCC, Scikit-learn, Librosa |
+| ML — Chatbot & Phrase Detection | TF-IDF, Linear SVC, Logistic Regression |
+
+![Flutter](https://img.shields.io/badge/-Flutter-02569B?style=flat&logo=flutter&logoColor=white)
+![Django](https://img.shields.io/badge/-Django-092E20?style=flat&logo=django&logoColor=white)
+![Python](https://img.shields.io/badge/-Python-3776AB?style=flat&logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Firebase](https://img.shields.io/badge/-Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)
+
+---
+
+## 🏗️ System Architecture
+
+Aawaj follows a layered architecture integrating mobile, backend,
+machine learning, and emergency response systems.
+
+### Layers
+
+- **Flutter Mobile App**
+  - SOS activation
+  - Location tracking
+  - Audio recording
+  - Mental health chatbot
+  - Disguise mode
+
+- **Django REST Backend**
+  - Authentication
+  - API handling
+  - Event processing
+  - Database communication
+
+- **Machine Learning Layer**
+  - Scream detection (MFCC + SVM)
+  - Phrase detection (TF-IDF + Linear SVC)
+  - Mental health intent classification
+
+- **Emergency Response Layer**
+  - GPS location retrieval
+  - SMS alert system
+  - Trusted contact notification
+  - Evidence recording
+
+- **Data Storage**
+  - PostgreSQL
+  - Firebase
+  
+## 🔄 System Workflow
+
+User Trigger
+    ↓
+AI Detection / Manual SOS
+    ↓
+Location + Audio Capture
+    ↓
+Backend Processing
+    ↓
+SMS Alert to Trusted Contacts
 
 ## 📸 Screenshots
 
@@ -140,23 +209,6 @@ mobile application that works even in low connectivity environments.
 </table>
 
 ---
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | Flutter (Dart) |
-| Backend | Django (Python) |
-| Database | PostgreSQL, Firebase |
-| ML — Scream Detection | SVM, MFCC, Scikit-learn, Librosa |
-| ML — Chatbot & Phrase Detection | TF-IDF, Linear SVC, Logistic Regression |
-
-![Flutter](https://img.shields.io/badge/-Flutter-02569B?style=flat&logo=flutter&logoColor=white)
-![Django](https://img.shields.io/badge/-Django-092E20?style=flat&logo=django&logoColor=white)
-![Python](https://img.shields.io/badge/-Python-3776AB?style=flat&logo=python&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
-![Firebase](https://img.shields.io/badge/-Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)
-
----
 
 ## Getting Started
 
@@ -186,7 +238,8 @@ python manage.py runserver
 
 ## Team
 
-Built by a team of 4 as a Major Project at Kathmandu Engineering College.
+Developed as a Major Project by a team of four students at 
+Kathmandu Engineering College.
 
 | Name |
 |------|
@@ -217,4 +270,4 @@ As one of four team members, I was personally responsible for:
 ## Links
 
 [LinkedIn](https://www.linkedin.com/in/neha-khatry/) · 
-[GitHub](https://github.com/Nehu2021)
+[GitHub](https://github.com/neha-khatry)
