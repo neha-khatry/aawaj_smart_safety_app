@@ -46,6 +46,100 @@ mobile application that works even in low connectivity environments.
 
 ---
 
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center">
+      <b>Welcome Screen</b><br/>
+      <img src="screenshots/welcome.png" width="220"/>
+    </td>
+    <td align="center">
+      <b>Home Dashboard</b><br/>
+      <img src="screenshots/dashboard.jpg" width="220"/>
+    </td>
+    <td align="center">
+      <b>SOS Trigger</b><br/>
+      <img src="screenshots/sos_trigger.png" width="220"/>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <b>SOS Cancelled</b><br/>
+      <img src="screenshots/sos_cancelled.png" width="220"/>
+    </td>
+    <td align="center">
+      <b>SMS Sent Alert</b><br/>
+      <img src="screenshots/sms_sent.png" width="220"/>
+    </td>
+    <td align="center">
+      <b>Live Location Sharing</b><br/>
+      <img src="screenshots/location.png" width="220"/>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <b>Location Permission</b><br/>
+      <img src="screenshots/location_permission.png" width="220"/>
+    </td>
+    <td align="center">
+      <b>Scheduled Check-In</b><br/>
+      <img src="screenshots/scheduled_checkin.png" width="220"/>
+    </td>
+    <td align="center">
+      <b>Check-In Message</b><br/>
+      <img src="screenshots/check_in_msg.png" width="220"/>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <b>Audio Recording</b><br/>
+      <img src="screenshots/audio_record.jpg" width="220"/>
+    </td>
+    <td align="center">
+      <b>Disguise Mode</b><br/>
+      <img src="screenshots/disguise.png" width="220"/>
+    </td>
+    <td align="center">
+      <b>Safe / Unsafe Status</b><br/>
+      <img src="screenshots/safe_not_safe.png" width="220"/>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <b>Phrase Detection Trigger 1</b><br/>
+      <img src="screenshots/phrase_detected_trigger_1.jpg" width="220"/>
+    </td>
+    <td align="center">
+      <b>Phrase Detection Trigger 2</b><br/>
+      <img src="screenshots/phrase_detected_trigger_2.jpg" width="220"/>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🧠 Mental Health Chatbot
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="screenshots/chatbot/1.png" width="220"/>
+    </td>
+    <td align="center">
+      <img src="screenshots/chatbot/2.png" width="220"/>
+    </td>
+    <td align="center">
+      <img src="screenshots/chatbot/3.png" width="220"/>
+    </td>
+  </tr>
+</table>
+
+---
 ## Tech Stack
 
 | Layer | Technology |
@@ -122,5 +216,5 @@ As one of four team members, I was personally responsible for:
 
 ## Links
 
-[LinkedIn](https://www.linkedin.com/in/neha-k-1a5917335) · 
+[LinkedIn](https://www.linkedin.com/in/neha-khatry/) · 
 [GitHub](https://github.com/Nehu2021)
